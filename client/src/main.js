@@ -13,6 +13,10 @@ let remotePlayerManager = null;
 let physicsWorld = null;
 let started = false;
 let starting = false;
+let lastTime = 0;
+let accumulator = 0;
+const fixedDelta = 1 / 60;
+const maxFrameDelta = 0.25;
 
 async function start() {
   if (started || starting) return;
@@ -45,6 +49,8 @@ async function start() {
     }
 
     overlay.style.display = "none";
+    lastTime = 0;
+    accumulator = 0;
     animate();
     started = true;
   } catch (error) {
@@ -55,12 +61,24 @@ async function start() {
   }
 }
 
-function animate() {
+function animate(now = performance.now()) {
   requestAnimationFrame(animate);
 
-  const input = isMobile ? getJoystickInput() : localPlayer.getKeyboardInput();
+  if (!lastTime) {
+    lastTime = now;
+  }
 
-  physicsWorld.step();
+  const frameDelta = Math.min((now - lastTime) / 1000, maxFrameDelta);
+  lastTime = now;
+  accumulator += frameDelta;
+
+  physicsWorld.timestep = fixedDelta;
+  while (accumulator >= fixedDelta) {
+    physicsWorld.step();
+    accumulator -= fixedDelta;
+  }
+
+  const input = isMobile ? getJoystickInput() : localPlayer.getKeyboardInput();
 
   localPlayer.update(input);
 

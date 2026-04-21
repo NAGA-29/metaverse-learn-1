@@ -43,6 +43,30 @@ function createLabel(text) {
   return sprite;
 }
 
+function disposeMaterial(material) {
+  if (!material) return;
+  for (const value of Object.values(material)) {
+    if (value && value.isTexture) {
+      value.dispose();
+    }
+  }
+  material.dispose();
+}
+
+function cleanupPlayerResources(group) {
+  group.traverse((obj) => {
+    if (obj.geometry && typeof obj.geometry.dispose === "function") {
+      obj.geometry.dispose();
+    }
+    if (!obj.material) return;
+    if (Array.isArray(obj.material)) {
+      obj.material.forEach(disposeMaterial);
+    } else {
+      disposeMaterial(obj.material);
+    }
+  });
+}
+
 export class RemotePlayerManager {
   constructor(scene) {
     this.scene = scene;
@@ -76,6 +100,7 @@ export class RemotePlayerManager {
       if (!serverIds.has(id)) {
         const p = this.players.get(id);
         this.scene.remove(p.group);
+        cleanupPlayerResources(p.group);
         this.players.delete(id);
       }
     }

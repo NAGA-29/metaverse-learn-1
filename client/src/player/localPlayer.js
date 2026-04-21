@@ -20,6 +20,9 @@ export class LocalPlayer {
     this.userId = null;
     this._canJump = false;
     this._cameraEuler = new THREE.Euler(0, 0, 0, "YXZ");
+    this._sensorEuler = new THREE.Euler(0, 0, 0, "YXZ");
+    this._touchEuler = new THREE.Euler(0, 0, 0, "YXZ");
+    this._isTouching = false;
 
     this._buildMesh();
     this._buildPhysics();
@@ -80,12 +83,13 @@ export class LocalPlayer {
   _initDeviceOrientation() {
     window.addEventListener("deviceorientation", (e) => {
       if (e.alpha == null) return;
+      if (this._isTouching) return;
       const alpha = THREE.MathUtils.degToRad(e.alpha);
       const beta = THREE.MathUtils.degToRad(e.beta);
       const gamma = THREE.MathUtils.degToRad(e.gamma);
 
-      this._cameraEuler.set(beta - Math.PI / 2, alpha, -gamma, "YXZ");
-      this.camera.quaternion.setFromEuler(this._cameraEuler);
+      this._sensorEuler.set(beta - Math.PI / 2, alpha, -gamma, "YXZ");
+      this._applyMobileCameraOrientation();
     });
   }
 
@@ -98,6 +102,7 @@ export class LocalPlayer {
       const t = e.changedTouches[0];
       lastX = t.clientX;
       lastY = t.clientY;
+      this._isTouching = true;
     }, { passive: true });
 
     area.addEventListener("touchmove", (e) => {
@@ -107,15 +112,15 @@ export class LocalPlayer {
       lastX = t.clientX;
       lastY = t.clientY;
 
-      this._cameraEuler.y -= dx * 0.003;
-      this._cameraEuler.x -= dy * 0.003;
-      this._cameraEuler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this._cameraEuler.x));
-      this.camera.quaternion.setFromEuler(this._cameraEuler);
+      this._touchEuler.y -= dx * 0.003;
+      this._touchEuler.x -= dy * 0.003;
+      this._applyMobileCameraOrientation();
     }, { passive: true });
 
     area.addEventListener("touchend", () => {
       lastX = null;
       lastY = null;
+      this._isTouching = false;
     }, { passive: true });
 
     document.getElementById("jump-btn").addEventListener("touchstart", (e) => {
@@ -139,10 +144,36 @@ export class LocalPlayer {
   }
 
   _tryJump() {
-    const vel = this.rigidBody.linvel();
-    if (Math.abs(vel.y) < 0.1) {
+    const pos = this.rigidBody.translation();
+    const ray = new rapier.Ray(
+      { x: pos.x, y: pos.y, z: pos.z },
+      { x: 0, y: -1, z: 0 }
+    );
+    const hit = this.physicsWorld.castRay(
+      ray,
+      BODY_HEIGHT + 0.08,
+      true,
+      undefined,
+      undefined,
+      undefined,
+      this.rigidBody
+    );
+    const isGrounded = hit != null;
+
+    if (isGrounded) {
       this.rigidBody.applyImpulse({ x: 0, y: JUMP_FORCE, z: 0 }, true);
     }
+  }
+
+  _applyMobileCameraOrientation() {
+    if (!this.isMobile) return;
+    const pitch = Math.max(
+      -Math.PI / 2,
+      Math.min(Math.PI / 2, this._sensorEuler.x + this._touchEuler.x)
+    );
+    const yaw = this._sensorEuler.y + this._touchEuler.y;
+    this._cameraEuler.set(pitch, yaw, this._sensorEuler.z, "YXZ");
+    this.camera.quaternion.setFromEuler(this._cameraEuler);
   }
 
   update(input) {

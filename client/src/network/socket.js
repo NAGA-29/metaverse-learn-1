@@ -18,6 +18,13 @@ function connect() {
 
   ws.addEventListener("open", () => {
     console.log("WebSocket connected");
+    const pos = callbacks.getPosition();
+    const rotY = callbacks.getRotationY();
+    if (pos && Number.isFinite(rotY)) {
+      lastPos = { ...pos };
+      lastRotY = rotY;
+      sendMove(pos, rotY);
+    }
     startSending();
   });
 
@@ -68,13 +75,18 @@ function startSending() {
     lastPos = { ...pos };
     lastRotY = rotY;
 
-    ws.send(JSON.stringify({
-      type: "move",
-      position: pos,
-      rotationY: rotY,
-      timestamp: Date.now(),
-    }));
+    sendMove(pos, rotY);
   }, SEND_INTERVAL_MS);
+}
+
+function sendMove(pos, rotY) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({
+    type: "move",
+    position: pos,
+    rotationY: rotY,
+    timestamp: Date.now(),
+  }));
 }
 
 function stopSending() {
