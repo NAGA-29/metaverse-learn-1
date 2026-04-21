@@ -37,15 +37,18 @@ export function updatePlayer(roomId, userId, data) {
   const room = getRoom(roomId);
   if (room.has(userId)) {
     const player = room.get(userId);
-    if (isFinitePosition(data.position)) {
-      player.position = data.position;
+    const hasValidPosition = isFinitePosition(data.position);
+    const hasValidRotation = Number.isFinite(data.rotationY);
+    const hasValidTimestamp = Number.isFinite(data.timestamp);
+
+    if (!hasValidPosition || !hasValidRotation || !hasValidTimestamp) {
+      console.warn(`Ignored invalid player update for ${userId}`);
+      return;
     }
-    if (Number.isFinite(data.rotationY)) {
-      player.rotationY = data.rotationY;
-    }
-    if (Number.isFinite(data.timestamp)) {
-      player.timestamp = data.timestamp;
-    }
+
+    player.position = data.position;
+    player.rotationY = data.rotationY;
+    player.timestamp = data.timestamp;
   }
 }
 
