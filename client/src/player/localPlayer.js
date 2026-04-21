@@ -5,6 +5,7 @@ import { createDynamicCapsuleBody, rapier } from "../world/physics.js";
 const MOVE_SPEED = 5;
 const JUMP_FORCE = 5;
 const BODY_HEIGHT = 0.85;
+const GROUND_CHECK_TOLERANCE = 0.08;
 
 const keys = {};
 
@@ -151,7 +152,7 @@ export class LocalPlayer {
     );
     const hit = this.physicsWorld.castRay(
       ray,
-      BODY_HEIGHT + 0.08,
+      BODY_HEIGHT + GROUND_CHECK_TOLERANCE,
       true,
       undefined,
       undefined,

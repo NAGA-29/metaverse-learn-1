@@ -16,7 +16,7 @@ let starting = false;
 let lastTime = 0;
 let accumulator = 0;
 const fixedDelta = 1 / 60;
-const maxFrameDelta = 0.25;
+const MAX_FRAME_DELTA_SECONDS = 0.25;
 
 async function start() {
   if (started || starting) return;
@@ -68,7 +68,7 @@ function animate(now = performance.now()) {
     lastTime = now;
   }
 
-  const frameDelta = Math.min((now - lastTime) / 1000, maxFrameDelta);
+  const frameDelta = Math.min((now - lastTime) / 1000, MAX_FRAME_DELTA_SECONDS);
   lastTime = now;
   accumulator += frameDelta;
 

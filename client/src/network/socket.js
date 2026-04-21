@@ -81,6 +81,15 @@ function startSending() {
 
 function sendMove(pos, rotY) {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  if (
+    !pos ||
+    !Number.isFinite(pos.x) ||
+    !Number.isFinite(pos.y) ||
+    !Number.isFinite(pos.z) ||
+    !Number.isFinite(rotY)
+  ) {
+    return;
+  }
   ws.send(JSON.stringify({
     type: "move",
     position: pos,
