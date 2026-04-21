@@ -10,6 +10,33 @@ import {
 
 const PORT = 3001;
 const ROOM_ID = "main";
+const POSITION_LIMIT = 1e6;
+
+function sanitizeMoveMessage(msg) {
+  const position = msg?.position;
+  if (
+    !position ||
+    typeof position !== "object" ||
+    !Number.isFinite(position.x) ||
+    !Number.isFinite(position.y) ||
+    !Number.isFinite(position.z) ||
+    Math.abs(position.x) > POSITION_LIMIT ||
+    Math.abs(position.y) > POSITION_LIMIT ||
+    Math.abs(position.z) > POSITION_LIMIT
+  ) {
+    return null;
+  }
+
+  if (!Number.isFinite(msg.rotationY) || !Number.isFinite(msg.timestamp)) {
+    return null;
+  }
+
+  return {
+    position: { x: position.x, y: position.y, z: position.z },
+    rotationY: msg.rotationY,
+    timestamp: msg.timestamp,
+  };
+}
 
 const wss = new WebSocketServer({ port: PORT });
 
@@ -35,10 +62,16 @@ wss.on("connection", (ws) => {
     }
 
     if (msg.type === "move") {
+      const sanitized = sanitizeMoveMessage(msg);
+      if (!sanitized) {
+        console.warn(`Invalid move payload from ${userId}`);
+        return;
+      }
+
       updatePlayer(ROOM_ID, userId, {
-        position: msg.position,
-        rotationY: msg.rotationY,
-        timestamp: msg.timestamp,
+        position: sanitized.position,
+        rotationY: sanitized.rotationY,
+        timestamp: sanitized.timestamp,
       });
 
       broadcastToAll(ROOM_ID, {

@@ -1,6 +1,20 @@
 const rooms = new Map();
 
 const DEFAULT_ROOM = "main";
+const POSITION_LIMIT = 1e6;
+
+function isFinitePosition(position) {
+  return (
+    position &&
+    typeof position === "object" &&
+    Number.isFinite(position.x) &&
+    Number.isFinite(position.y) &&
+    Number.isFinite(position.z) &&
+    Math.abs(position.x) <= POSITION_LIMIT &&
+    Math.abs(position.y) <= POSITION_LIMIT &&
+    Math.abs(position.z) <= POSITION_LIMIT
+  );
+}
 
 function getRoom(roomId = DEFAULT_ROOM) {
   if (!rooms.has(roomId)) {
@@ -23,9 +37,15 @@ export function updatePlayer(roomId, userId, data) {
   const room = getRoom(roomId);
   if (room.has(userId)) {
     const player = room.get(userId);
-    player.position = data.position;
-    player.rotationY = data.rotationY;
-    player.timestamp = data.timestamp;
+    if (isFinitePosition(data.position)) {
+      player.position = data.position;
+    }
+    if (Number.isFinite(data.rotationY)) {
+      player.rotationY = data.rotationY;
+    }
+    if (Number.isFinite(data.timestamp)) {
+      player.timestamp = data.timestamp;
+    }
   }
 }
 

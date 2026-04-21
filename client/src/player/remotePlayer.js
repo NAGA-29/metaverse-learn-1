@@ -1,6 +1,22 @@
 import * as THREE from "three";
 
 const LERP_FACTOR = 0.18;
+const POSITION_LIMIT = 1e6;
+
+function isValidPlayerState(info) {
+  const position = info?.position;
+  return (
+    position &&
+    typeof position === "object" &&
+    Number.isFinite(position.x) &&
+    Number.isFinite(position.y) &&
+    Number.isFinite(position.z) &&
+    Math.abs(position.x) <= POSITION_LIMIT &&
+    Math.abs(position.y) <= POSITION_LIMIT &&
+    Math.abs(position.z) <= POSITION_LIMIT &&
+    Number.isFinite(info.rotationY)
+  );
+}
 
 function createAvatarMesh() {
   const group = new THREE.Group();
@@ -78,6 +94,7 @@ export class RemotePlayerManager {
 
     for (const [id, info] of Object.entries(serverData)) {
       if (id === localUserId) continue;
+      if (!isValidPlayerState(info)) continue;
 
       if (!this.players.has(id)) {
         const group = createAvatarMesh();
