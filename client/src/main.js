@@ -12,38 +12,48 @@ let localPlayer = null;
 let remotePlayerManager = null;
 let physicsWorld = null;
 let started = false;
+let starting = false;
 
 async function start() {
-  if (started) return;
-  started = true;
+  if (started || starting) return;
+  starting = true;
+  const overlay = document.getElementById("overlay");
+  overlay.style.display = "none";
 
-  document.getElementById("overlay").style.display = "none";
+  try {
+    initScene(document.getElementById("canvas-container"));
 
-  initScene(document.getElementById("canvas-container"));
+    physicsWorld = await initPhysics();
 
-  physicsWorld = await initPhysics();
+    createFloor(scene, physicsWorld);
 
-  createFloor(scene, physicsWorld);
+    localPlayer = new LocalPlayer(scene, physicsWorld, camera, isMobile);
+    remotePlayerManager = new RemotePlayerManager(scene);
 
-  localPlayer = new LocalPlayer(scene, physicsWorld, camera, isMobile);
-  remotePlayerManager = new RemotePlayerManager(scene);
+    initSocket({
+      onPlayers: (data) => remotePlayerManager.update(data, localPlayer.userId),
+      onInit: (userId) => { localPlayer.userId = userId; },
+      getPosition: () => localPlayer.getPosition(),
+      getRotationY: () => localPlayer.getRotationY(),
+    });
 
-  initSocket({
-    onPlayers: (data) => remotePlayerManager.update(data, localPlayer.userId),
-    onInit: (userId) => { localPlayer.userId = userId; },
-    getPosition: () => localPlayer.getPosition(),
-    getRotationY: () => localPlayer.getRotationY(),
-  });
+    if (isMobile) {
+      initJoystick();
+      document.getElementById("joystick-zone").style.display = "block";
+      document.getElementById("jump-btn").style.display = "flex";
+      document.getElementById("camera-area").style.display = "block";
+      document.getElementById("hud").style.display = "none";
+    }
 
-  if (isMobile) {
-    initJoystick();
-    document.getElementById("joystick-zone").style.display = "block";
-    document.getElementById("jump-btn").style.display = "flex";
-    document.getElementById("camera-area").style.display = "block";
-    document.getElementById("hud").style.display = "none";
+    started = true;
+    animate();
+  } catch (error) {
+    started = false;
+    overlay.style.display = "flex";
+    console.error("Failed to start metaverse:", error);
+  } finally {
+    starting = false;
   }
-
-  animate();
 }
 
 function animate() {
