@@ -18,7 +18,6 @@ async function start() {
   if (started || starting) return;
   starting = true;
   const overlay = document.getElementById("overlay");
-  overlay.style.display = "none";
 
   try {
     initScene(document.getElementById("canvas-container"));
@@ -45,10 +44,10 @@ async function start() {
       document.getElementById("hud").style.display = "none";
     }
 
-    started = true;
+    overlay.style.display = "none";
     animate();
+    started = true;
   } catch (error) {
-    started = false;
     overlay.style.display = "flex";
     console.error("Failed to start metaverse:", error);
   } finally {
