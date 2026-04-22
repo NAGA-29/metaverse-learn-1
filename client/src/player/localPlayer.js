@@ -6,6 +6,7 @@ const MOVE_SPEED = 5;
 const JUMP_FORCE = 5;
 const BODY_HEIGHT = 0.85;
 const GROUND_CHECK_TOLERANCE = 0.08;
+const HEAD_SIZE = 0.5;
 
 const keys = {};
 
@@ -54,9 +55,19 @@ export class LocalPlayer {
     this.headMesh = new THREE.Mesh(headGeo, headMat);
     this.headMesh.position.y = 1.15;
 
+    const faceGeo = new THREE.PlaneGeometry(0.26, 0.18);
+    const faceMat = new THREE.MeshBasicMaterial({
+      color: 0x66ffcc,
+      transparent: true,
+      opacity: 0.9,
+    });
+    this.faceMesh = new THREE.Mesh(faceGeo, faceMat);
+    this.faceMesh.position.set(0, 1.15, HEAD_SIZE / 2 + 0.001);
+
     this.avatarGroup = new THREE.Group();
     this.avatarGroup.add(this.bodyMesh);
     this.avatarGroup.add(this.headMesh);
+    this.avatarGroup.add(this.faceMesh);
     this.scene.add(this.avatarGroup);
   }
 

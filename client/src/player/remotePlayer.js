@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 const LERP_FACTOR = 0.18;
 const POSITION_LIMIT = 1e6;
+const HEAD_SIZE = 0.5;
 
 function isValidPlayerState(info) {
   const position = info?.position;
@@ -33,6 +34,12 @@ function createAvatarMesh() {
   head.position.y = 1.15;
   head.castShadow = true;
   group.add(head);
+
+  const faceGeo = new THREE.PlaneGeometry(0.26, 0.18);
+  const faceMat = new THREE.MeshBasicMaterial({ color: 0xfff36b });
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.position.set(0, 1.15, HEAD_SIZE / 2 + 0.001);
+  group.add(face);
 
   return group;
 }
