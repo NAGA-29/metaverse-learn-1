@@ -81,7 +81,8 @@ metaverse-mvp/
 cd server
 npm install
 node server.js
-# → ws://localhost:3001 で起動
+# → 0.0.0.0:3001 で待受
+# → 他の端末は ws://<PCのIPアドレス>:3001 を使う
 ```
 
 ### クライアント起動
@@ -169,9 +170,11 @@ npm run dev
 
 | 変数名 | デフォルト | 説明 |
 |---|---|---|
-| `VITE_WS_URL` | `ws://localhost:3001` | WebSocketサーバーのURL |
+| `VITE_WS_URL` | `未設定時はアクセス中のホスト名を使って自動決定` | WebSocketサーバーのURL |
 
-スマホから接続する場合など、サーバーのIPを変える際は `client/.env` に設定:
+通常は `client/.env` を設定しなくても、`http://<PCのIPアドレス>:5173` で開けば `ws://<PCのIPアドレス>:3001` に自動接続する。
+
+クライアント配信先と WebSocket サーバーが別ホストのときだけ `client/.env` に設定:
 
 ```
 VITE_WS_URL=ws://192.168.1.10:3001

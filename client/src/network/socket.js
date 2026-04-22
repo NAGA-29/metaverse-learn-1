@@ -1,4 +1,4 @@
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
+const DEFAULT_WS_PORT = "3001";
 const SEND_INTERVAL_MS = 50;
 const RECONNECT_DELAY_MS = 3000;
 
@@ -13,8 +13,18 @@ export function initSocket({ onPlayers, onInit, getPosition, getRotationY }) {
   connect();
 }
 
+function resolveWsUrl() {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
+
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const hostname = window.location.hostname || "localhost";
+  return `${protocol}//${hostname}:${DEFAULT_WS_PORT}`;
+}
+
 function connect() {
-  ws = new WebSocket(WS_URL);
+  ws = new WebSocket(resolveWsUrl());
 
   ws.addEventListener("open", () => {
     console.log("WebSocket connected");

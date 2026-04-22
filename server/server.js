@@ -8,7 +8,8 @@ import {
   broadcastToAll,
 } from "./rooms.js";
 
-const PORT = 3001;
+const PORT = Number(process.env.PORT || 3001);
+const HOST = process.env.HOST || "0.0.0.0";
 const ROOM_ID = "main";
 const POSITION_LIMIT = 1e6;
 
@@ -38,9 +39,10 @@ function sanitizeMoveMessage(msg) {
   };
 }
 
-const wss = new WebSocketServer({ port: PORT });
+const wss = new WebSocketServer({ port: PORT, host: HOST });
 
-console.log(`WebSocket server running on ws://localhost:${PORT}`);
+console.log(`WebSocket server listening on ${HOST}:${PORT}`);
+console.log("Connect other devices using ws://<this-machine-lan-ip>:" + PORT);
 
 wss.on("connection", (ws) => {
   const userId = uuidv4();
